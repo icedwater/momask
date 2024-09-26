@@ -113,27 +113,35 @@ class Joint2BVHConvertor:
         glb = Animation.positions_global(anim)[:, self.re_order_inv]
         return anim, glb
 
+def example():
+    """
+    Obviously will not work until the file exists, but this just shows syntax.
+    Here we assume the Numpy array to be just data, not an object.
+    """
+    # file = 'batch2_sample13_repeat0_len196.npy'
+    # TODO: figure out why these lines in convert() are important:
+    ### (51?) new_anim.positions = lpos
+    ### (52?) new_anim.positions[0:1].repeat(positions.shape[0], axis=-0)
+    converter = Joint2BVHConvertor()
+    example_npy = "batch1_sample12_repeat0_len196.npy"      # just using the karate example
+    path = f"/path/to/joints/{example_npy}"
+    joints = np.load(path)
+    new_anim = converter.convert(joints, "./gen_L196.mp4", foot_ik=True)
 
 
-if __name__ == "__main__":
-    # file = 'batch0_sample13_repeat0_len196.npy'
-    # file = 'batch2_sample10_repeat0_len156.npy'
-    # file = 'batch2_sample13_repeat0_len196.npy' #line #57 new_anim.positions = lpos #new_anim.positions[0:1].repeat(positions.shape[0], axis=-0) #TODO, figure out why it's important
-    # file = 'batch1_sample12_repeat0_len196.npy' #hard case karate
-    # file = 'batch1_sample14_repeat0_len180.npy'
-    # file = 'batch0_sample3_repeat0_len192.npy'
-    # file = 'batch1_sample4_repeat0_len136.npy'
-
-    # file = 'batch0_sample0_repeat0_len152.npy'
-    # path = f'/Users/yuxuanmu/project/MaskMIT/demo/cond4_topkr0.9_ts18_tau1.0_s1009/joints/{file}'
-    # joints = np.load(path)
-    # converter = Joint2BVHConvertor()
-    # new_anim = converter.convert(joints, './gen_L196.mp4', foot_ik=True)
-
-    folder = '/Users/yuxuanmu/project/MaskMIT/demo/cond4_topkr0.9_ts18_tau1.0_s1009'
+def batch_example():
+    """
+    Again another non-working syntax example, this time for a full folder.
+    """
+    converter = Joint2BVHConvertor()
+    folder = "/path/to/folder_of_npys"
     files = os.listdir(os.path.join(folder, 'joints'))
     files = [f for f in files if 'repeat' in f]
     converter = Joint2BVHConvertor()
     for f in tqdm(files):
         joints = np.load(os.path.join(folder, 'joints', f))
         converter.convert(joints, os.path.join(folder, 'ik_animations', f'ik_{f}'.replace('npy', 'mp4')), foot_ik=True)
+
+
+if __name__ == "__main__":
+    main()
