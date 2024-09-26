@@ -14,6 +14,8 @@ from torch import nn
 from visualization.utils.quat import ik_rot, between, fk, ik
 from tqdm import tqdm
 
+from pathlib import Path
+
 
 def get_grot(glb, parent, offset):
     root_quat = np.array([[1.0, 0.0, 0.0, 0.0]]).repeat(glb.shape[0], axis=0)[:, None]
@@ -142,6 +144,30 @@ def batch_example():
         joints = np.load(os.path.join(folder, 'joints', f))
         converter.convert(joints, os.path.join(folder, 'ik_animations', f'ik_{f}'.replace('npy', 'mp4')), foot_ik=True)
 
+def convert_one_result(npy_dir: str, sample :int=0, rep :int=0, converter :Joint2BVHConvertor=None, foot_ik :bool=True):
+    """
+    Given a directory, a sample, and a rep, convert its result to a BVH.
+    BVH can be previewed in https://vrm-c.github.io/bvh2vrma or Blender.
+
+    :param npy_dir:     path to the directory containing the relevant results.npy
+    :param sample:      index number of the sample to be considered, default 0
+    :param rep:         index number of the rep to be considered, default 0
+    :param converter:   Joint2BVHConvertor that does the actual conversion
+    :param foot_ik:     whether or not to use foot_ik
+    """
+    path = Path(f"{npy_dir}/results.npy")
+    results = np.load(path, allow_pickle=True).item()
+    motion = results.get("motion")
+
+    joints = motion[rep, sample].transpose(2, 0, 1)
+    output_path = f"{npy_dir}/sample{sample:02d}_rep{rep:02d}.bvh"
+    converter.convert(joints, output_path, foot_ik=foot_ik)
+
+
+def main():
+    converter = Joint2BVHConvertor()
+    folder = ""
+    convert_one_result(npy_dir=folder, converter=converter, foot_ik=True)
 
 if __name__ == "__main__":
     main()
