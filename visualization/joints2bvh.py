@@ -42,7 +42,7 @@ class Joint2BVHConvertor:
     def convert(self, positions, filename, iterations=10, foot_ik=True):
         '''
         Convert the SMPL joint positions to Mocap BVH
-        :param positions: (N, 22, 3)
+        :param positions: (N, num_joints, 3) - num_joints = 22 for t2m rig
         :param filename: Save path for resulting BVH
         :param iterations: iterations for optimizing rotations, 10 is usually enough
         :param foot_ik: whether to enfore foot inverse kinematics, removing foot slide issue.
@@ -70,7 +70,7 @@ class Joint2BVHConvertor:
         '''
         Convert the SMPL joint positions to Mocap BVH
 
-        :param positions: (N, 22, 3)
+        :param positions: (N, num_joints, 3) - num_joints = 22 for t2m rig
         :param filename: Save path for resulting BVH
         :param iterations: iterations for optimizing rotations, 10 is usually enough
         :param foot_ik: whether to enfore foot inverse kinematics, removing foot slide issue.
