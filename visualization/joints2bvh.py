@@ -39,13 +39,15 @@ class Joint2BVHConvertor:
         self.template_offset = self.template.offsets.copy()
         self.parents = [-1, 0, 1, 2, 3, 4, 0, 6, 7, 8, 9, 0, 11, 12, 13, 14, 15, 13, 17, 18, 19, 20, 13, 22, 23, 24, 25]
 
-    def convert(self, positions, filename, iterations=10, foot_ik=True):
+    def convert(self, positions, filename, iterations=10, foot_ik=True, left_foot=(3, 4), right_foot=(7, 8)):
         '''
         Convert the SMPL joint positions to Mocap BVH
         :param positions: (N, num_joints, 3) - num_joints = 22 for t2m rig
         :param filename: Save path for resulting BVH
         :param iterations: iterations for optimizing rotations, 10 is usually enough
         :param foot_ik: whether to enfore foot inverse kinematics, removing foot slide issue.
+        :param left_foot: tuple for the left foot joints
+        :param right_foot: tuple for the right foot joints
         :return:
         '''
         positions = positions[:, self.re_order]
@@ -55,7 +57,7 @@ class Joint2BVHConvertor:
         new_anim.positions[:, 0] = positions[:, 0]
 
         if foot_ik:
-            positions = remove_fs(positions, None, fid_l=(3, 4), fid_r=(7, 8), interp_length=5,
+            positions = remove_fs(positions, None, fid_l=left_foot, fid_r=right_foot, interp_length=5,
                                   force_on_floor=True)
         ik_solver = BasicInverseKinematics(new_anim, positions, iterations=iterations, silent=True)
         new_anim = ik_solver()
@@ -66,7 +68,7 @@ class Joint2BVHConvertor:
             BVH.save(filename, new_anim, names=new_anim.names, frametime=1 / 20, order='zyx', quater=True)
         return new_anim, glb
 
-    def convert_sgd(self, positions, filename, iterations=100, foot_ik=True):
+    def convert_sgd(self, positions, filename, iterations=100, foot_ik=True, left_foot=(3, 4), right_foot=(7, 8)):
         '''
         Convert the SMPL joint positions to Mocap BVH
 
@@ -74,6 +76,8 @@ class Joint2BVHConvertor:
         :param filename: Save path for resulting BVH
         :param iterations: iterations for optimizing rotations, 10 is usually enough
         :param foot_ik: whether to enfore foot inverse kinematics, removing foot slide issue.
+        :param left_foot: tuple for the left foot joints
+        :param right_foot: tuple for the right foot joints
         :return:
         '''
 
@@ -81,7 +85,7 @@ class Joint2BVHConvertor:
         glb = positions[:, self.re_order]
 
         if foot_ik:
-             glb = remove_fs(glb, None, fid_l=(3, 4), fid_r=(7, 8), interp_length=2,
+             glb = remove_fs(glb, None, fid_l=left_foot, fid_r=right_foot, interp_length=2,
                                  force_on_floor=True)
 
         ## Fit BVH ##
@@ -128,7 +132,7 @@ def example():
     example_npy = "batch1_sample12_repeat0_len196.npy"      # just using the karate example
     path = f"/path/to/joints/{example_npy}"
     joints = np.load(path)
-    new_anim = converter.convert(joints, "./gen_L196.mp4", foot_ik=True)
+    new_anim = converter.convert(joints, "./gen_L196.mp4", foot_ik=True, left_foot=(3, 4), right_foot=(7, 8))
 
 
 def batch_example():
@@ -142,9 +146,9 @@ def batch_example():
     converter = Joint2BVHConvertor()
     for f in tqdm(files):
         joints = np.load(os.path.join(folder, 'joints', f))
-        converter.convert(joints, os.path.join(folder, 'ik_animations', f'ik_{f}'.replace('npy', 'mp4')), foot_ik=True)
+        converter.convert(joints, os.path.join(folder, 'ik_animations', f'ik_{f}'.replace('npy', 'mp4')), foot_ik=True, left_foot=(3, 4), right_foot=(7, 8))
 
-def convert_one_result(npy_dir: str, sample :int=0, rep :int=0, converter :Joint2BVHConvertor=None, foot_ik :bool=True):
+def convert_one_result(npy_dir: str, sample :int=0, rep :int=0, converter :Joint2BVHConvertor=None, foot_ik :bool=True, left_foot :tuple=(3, 4), right_foot :tuple=(7, 8)):
     """
     Given a directory, a sample, and a rep, convert its result to a BVH.
     BVH can be previewed in https://vrm-c.github.io/bvh2vrma or Blender.
@@ -154,6 +158,8 @@ def convert_one_result(npy_dir: str, sample :int=0, rep :int=0, converter :Joint
     :param rep:         index number of the rep to be considered, default 0
     :param converter:   Joint2BVHConvertor that does the actual conversion
     :param foot_ik:     whether or not to use foot_ik
+    :param left_foot:   if foot_ik is true, use this tuple for left foot joints
+    :param right_foot:  if foot_ik is true, use this tuple for right foot joints
     """
     path = Path(f"{npy_dir}/results.npy")
     results = np.load(path, allow_pickle=True).item()
@@ -161,7 +167,7 @@ def convert_one_result(npy_dir: str, sample :int=0, rep :int=0, converter :Joint
 
     joints = motion[rep, sample].transpose(2, 0, 1)
     output_path = f"{npy_dir}/sample{sample:02d}_rep{rep:02d}.bvh"
-    converter.convert(joints, output_path, foot_ik=foot_ik)
+    converter.convert(joints, output_path, foot_ik=foot_ik, left_foot=left_foot, right_foot=right_foot)
 
 
 def main():
