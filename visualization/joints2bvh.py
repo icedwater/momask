@@ -30,7 +30,7 @@ def get_grot(glb, parent, offset):
 
 class Joint2BVHConvertor:
     def __init__(self):
-        self.template = BVH.load('./visualization/data/customrig.bvh', need_quater=True)
+        self.template = BVH.load('./visualization/data/custom2rig.bvh', need_quater=True)
         self.re_order = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26]
 
         self.re_order_inv = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26]
@@ -50,6 +50,7 @@ class Joint2BVHConvertor:
         :param right_foot: tuple for the right foot joints
         :return:
         '''
+        # breakpoint()
         positions = positions[:, self.re_order]
         new_anim = self.template.copy()
         new_anim.rotations = Quaternions.id(positions.shape[:-1])
@@ -170,10 +171,21 @@ def convert_one_result(npy_dir: str, sample :int=0, rep :int=0, converter :Joint
     converter.convert(joints, output_path, foot_ik=foot_ik, left_foot=left_foot, right_foot=right_foot)
 
 
+def convert_previous_batch():
+    converter = Joint2BVHConvertor()
+    models = [750, 800, 850, 900, 1000]
+    for model in models:
+        print(model)
+        folder = "/path/to/folder_of_npys"
+        for sample in range(1):
+            for rep in range(10):
+                convert_one_result(npy_dir=folder, rep=rep, sample=sample, converter=converter, foot_ik=True)
+
 def main():
     converter = Joint2BVHConvertor()
-    folder = ""
-    convert_one_result(npy_dir=folder, converter=converter, foot_ik=True)
+    folder = "/path/to/folder_of_npys"
+    for rep in range(10):
+        convert_one_result(npy_dir=folder, rep=rep, sample=0, converter=converter, foot_ik=True, left_foot=(4, 5), right_foot=(9, 10))
 
 if __name__ == "__main__":
     main()
